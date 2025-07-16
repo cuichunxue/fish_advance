@@ -72,8 +72,10 @@
         #infoPanel {
             top: 130px;
             left: 10px;
-            max-width: 250px;
-            font-size: 12px;
+            max-width: 180px;
+            font-size: 10px;
+            opacity: 0.7;
+            transform: scale(0.8);
         }
 
         #skillsPanel {
@@ -395,7 +397,7 @@
                 color: '#90EE90',
                 level: 1,
                 dangerous: false,
-                spawnWeight: 80
+                spawnWeight: 40
             },
             SMALL_FISH: {
                 name: '小魚',
@@ -406,7 +408,7 @@
                 color: '#FFD700',
                 level: 1,
                 dangerous: false,
-                spawnWeight: 60
+                spawnWeight: 30
             },
             TROPICAL_FISH: {
                 name: '熱帯魚',
@@ -417,7 +419,7 @@
                 color: '#FF69B4',
                 level: 1,
                 dangerous: false,
-                spawnWeight: 50
+                spawnWeight: 25
             },
             ANGELFISH: {
                 name: 'エンゼルフィッシュ',
@@ -428,7 +430,7 @@
                 color: '#87CEEB',
                 level: 1,
                 dangerous: false,
-                spawnWeight: 40
+                spawnWeight: 20
             },
             
             // 中型の魚
@@ -441,7 +443,7 @@
                 color: '#4169E1',
                 level: 2,
                 dangerous: false,
-                spawnWeight: 30
+                spawnWeight: 15
             },
             TUNA: {
                 name: 'マグロ',
@@ -452,7 +454,7 @@
                 color: '#2F4F4F',
                 level: 2,
                 dangerous: false,
-                spawnWeight: 25
+                spawnWeight: 12
             },
             SALMON: {
                 name: 'サケ',
@@ -463,7 +465,7 @@
                 color: '#FA8072',
                 level: 2,
                 dangerous: false,
-                spawnWeight: 25
+                spawnWeight: 12
             },
             
             // 攻撃的な魚
@@ -477,7 +479,7 @@
                 level: 2,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 50
+                spawnWeight: 70
             },
             PIRANHA: {
                 name: 'ピラニア',
@@ -489,7 +491,7 @@
                 level: 2,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 45
+                spawnWeight: 65
             },
             SWORDFISH: {
                 name: 'カジキ',
@@ -501,7 +503,7 @@
                 level: 3,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 35
+                spawnWeight: 50
             },
             MORAY_EEL: {
                 name: 'ウツボ',
@@ -513,7 +515,7 @@
                 level: 3,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 30
+                spawnWeight: 45
             },
             
             // 危険な魚
@@ -527,7 +529,7 @@
                 level: 1,
                 dangerous: true,
                 isToxic: true,
-                spawnWeight: 20
+                spawnWeight: 35
             },
             PUFFERFISH: {
                 name: 'フグ',
@@ -539,7 +541,7 @@
                 level: 2,
                 dangerous: true,
                 canInflate: true,
-                spawnWeight: 18
+                spawnWeight: 30
             },
             STINGRAY: {
                 name: 'エイ',
@@ -550,7 +552,7 @@
                 color: '#696969',
                 level: 3,
                 dangerous: true,
-                spawnWeight: 8
+                spawnWeight: 15
             },
             
             // 捕食者
@@ -564,7 +566,7 @@
                 level: 2,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 10
+                spawnWeight: 20
             },
             BARRACUDA: {
                 name: 'バラクーダ',
@@ -576,7 +578,7 @@
                 level: 3,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 8
+                spawnWeight: 15
             },
             
             // ボス級生物
@@ -642,7 +644,7 @@
                 level: 2,
                 dangerous: true,
                 isToxic: true,
-                spawnWeight: 12
+                spawnWeight: 25
             },
             OCTOPUS: {
                 name: 'タコ',
@@ -653,7 +655,7 @@
                 color: '#8B0000',
                 level: 3,
                 dangerous: true,
-                spawnWeight: 5
+                spawnWeight: 12
             },
             SQUID: {
                 name: 'イカ',
@@ -664,7 +666,7 @@
                 color: '#2F4F4F',
                 level: 3,
                 dangerous: true,
-                spawnWeight: 6
+                spawnWeight: 15
             },
             
             // 特別アイテム
@@ -1241,11 +1243,11 @@
 
         // スキル関数（強化版）
         function useTimeFreeze() {
-            if (GameState.freezeCooldown > 0 || GameState.energy < 40) return;
+            if (GameState.freezeCooldown > 0 || GameState.energy < 50) return;
             
             GameState.isTimeFreeze = true;
             GameState.freezeTime = 3000; // 3秒間
-            GameState.energy -= 40;
+            GameState.energy -= 50;
             GameState.freezeCooldown = 8000; // 8秒クールダウン
             
             createTimeFreezeEffect();
@@ -1253,13 +1255,13 @@
         }
 
         function useGiantMode() {
-            if (GameState.giantCooldown > 0 || GameState.energy < 50) return;
+            if (GameState.giantCooldown > 0 || GameState.energy < 60) return;
             
             GameState.isGiantMode = true;
             GameState.giantTime = 4000; // 4秒間
             GameState.originalRadius = GameState.player.radius;
             GameState.player.radius *= 2.5; // 2.5倍の大きさに
-            GameState.energy -= 50;
+            GameState.energy -= 60;
             GameState.giantCooldown = 10000; // 10秒クールダウン
             
             createGiantModeEffect();
@@ -1267,11 +1269,11 @@
         }
 
         function useMagnet() {
-            if (GameState.magnetCooldown > 0 || GameState.energy < 25) return;
+            if (GameState.magnetCooldown > 0 || GameState.energy < 35) return;
             
             GameState.magnetActive = true;
             GameState.magnetTime = 5000; // 5秒間
-            GameState.energy -= 25;
+            GameState.energy -= 35;
             GameState.magnetCooldown = 6000; // 6秒クールダウン
             
             createMagnetEffect();
@@ -2091,19 +2093,19 @@
 
         function updateSkillButtons() {
             if (elements.freezeBtn) {
-                elements.freezeBtn.disabled = GameState.freezeCooldown > 0 || GameState.energy < 40;
+                elements.freezeBtn.disabled = GameState.freezeCooldown > 0 || GameState.energy < 50;
                 elements.freezeBtn.textContent = GameState.freezeCooldown > 0 ? 
                     `❄️ ${Math.ceil(GameState.freezeCooldown/1000)}s` : '❄️ 時間停止';
             }
             
             if (elements.growBtn) {
-                elements.growBtn.disabled = GameState.giantCooldown > 0 || GameState.energy < 50;
+                elements.growBtn.disabled = GameState.giantCooldown > 0 || GameState.energy < 60;
                 elements.growBtn.textContent = GameState.giantCooldown > 0 ? 
                     `🐋 ${Math.ceil(GameState.giantCooldown/1000)}s` : '🐋 巨大化';
             }
             
             if (elements.magnetBtn) {
-                elements.magnetBtn.disabled = GameState.magnetCooldown > 0 || GameState.energy < 25;
+                elements.magnetBtn.disabled = GameState.magnetCooldown > 0 || GameState.energy < 35;
                 elements.magnetBtn.textContent = GameState.magnetCooldown > 0 ? 
                     `🧲 ${Math.ceil(GameState.magnetCooldown/1000)}s` : '🧲 磁石';
             }
@@ -2166,13 +2168,13 @@
             const creatureType = CreatureTypes[entity.type];
             
             if (creatureType.isHealthItem) {
-                GameState.player.health = Math.min(100, GameState.player.health + 30);
+                GameState.player.health = Math.min(100, GameState.player.health + 20);
                 GameState.score += creatureType.value;
                 createHealingEffect(entity.x, entity.y);
                 addCombo();
             } else if (creatureType.isPowerUp) {
                 GameState.isInvincible = true;
-                GameState.invincibilityTime = 2000;
+                GameState.invincibilityTime = 1500;
                 GameState.score += creatureType.value;
                 createPowerUpEffect(entity.x, entity.y);
                 addCombo();
@@ -2206,15 +2208,15 @@
                     }
                 }
                 
-                let damage = 40;
-                if (creatureType.isToxic) damage = 50;
-                if (creatureType.isAggressive) damage = 65;
-                if (creatureType.isApexPredator) damage = 90;
-                if (creatureType.isBoss) damage = 85;
+                let damage = 60;
+                if (creatureType.isToxic) damage = 75;
+                if (creatureType.isAggressive) damage = 85;
+                if (creatureType.isApexPredator) damage = 95;
+                if (creatureType.isBoss) damage = 90;
                 
                 GameState.player.health -= damage;
                 GameState.isInvincible = true;
-                GameState.invincibilityTime = 600;
+                GameState.invincibilityTime = 400;
                 GameState.combo = 0;
                 
                 createDamageEffect(entity.x, entity.y, damage);
@@ -2231,7 +2233,7 @@
                     if (GameState.isGiantMode) growthAmount *= 1.5; // 巨大化中は成長ボーナス
                     
                     GameState.player.radius += growthAmount;
-                    GameState.oxygen = Math.min(100, GameState.oxygen + 3);
+                    GameState.oxygen = Math.min(100, GameState.oxygen + 2);
                 }
                 createEatEffect(entity.x, entity.y, creatureType.value);
                 addCombo();
@@ -2261,14 +2263,14 @@
         }
 
         function updateOxygen(deltaTime) {
-            GameState.oxygen -= 0.025;
+            GameState.oxygen -= 0.035;
             if (GameState.oxygen <= 0) {
                 gameOver();
             }
         }
 
         function updateEnergy(deltaTime) {
-            GameState.energy = Math.min(100, GameState.energy + 0.01);
+            GameState.energy = Math.min(100, GameState.energy + 0.005);
         }
 
         function checkLevelUp() {
