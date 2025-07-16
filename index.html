@@ -859,8 +859,8 @@
             
             if (dist < 150) {
                 // 直接攻撃
-                entity.vx = (dx / dist) * entity.speed * 1.1;
-                entity.vy = (dy / dist) * entity.speed * 1.1;
+                entity.vx = (dx / dist) * entity.speed * 1;
+                entity.vy = (dy / dist) * entity.speed * 1;
                 entity.isAttacking = true;
                 
                 // 攻撃エフェクト
