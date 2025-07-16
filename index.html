@@ -80,28 +80,30 @@
         }
 
         #skillsPanel {
-            bottom: calc(env(safe-area-inset-bottom) + 20px);
-            left: env(safe-area-inset-left, 20px);
+            bottom: calc(env(safe-area-inset-bottom) + 10px);
+            left: env(safe-area-inset-left, 10px);
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: rgba(75, 0, 130, 0.9);
-            border-radius: 15px;
-            padding: 10px;
+            flex-direction: row;
+            gap: 8px;
+            background: rgba(75, 0, 130, 0.6);
+            border-radius: 10px;
+            padding: 6px;
+            opacity: 0.8;
+            transform: scale(0.8);
         }
 
         .skill-button {
             background: linear-gradient(45deg, #ff6b35, #f7931e);
             border: none;
             color: white;
-            padding: 10px 15px;
-            border-radius: 25px;
-            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 15px;
+            font-size: 11px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
-            min-width: 120px;
+            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+            min-width: 60px;
             text-align: center;
         }
 
@@ -473,7 +475,7 @@
             AGGRESSIVE_FISH: {
                 name: '攻撃的な魚',
                 size: 16,
-                speed: 5,
+                speed: 3.5,
                 value: -30,
                 behavior: 'aggressive_hunter',
                 color: '#FF4500',
@@ -485,7 +487,7 @@
             PIRANHA: {
                 name: 'ピラニア',
                 size: 12,
-                speed: 6,
+                speed: 4,
                 value: -25,
                 behavior: 'pack_hunter',
                 color: '#DC143C',
@@ -497,7 +499,7 @@
             SWORDFISH: {
                 name: 'カジキ',
                 size: 25,
-                speed: 7,
+                speed: 4.5,
                 value: -50,
                 behavior: 'spear_attack',
                 color: '#4682B4',
@@ -509,7 +511,7 @@
             MORAY_EEL: {
                 name: 'ウツボ',
                 size: 20,
-                speed: 4,
+                speed: 3,
                 value: -40,
                 behavior: 'snake_attack',
                 color: '#228B22',
@@ -560,7 +562,7 @@
             BABY_SHARK: {
                 name: '子サメ',
                 size: 20,
-                speed: 4,
+                speed: 3,
                 value: -40,
                 behavior: 'smart_chase',
                 color: '#708090',
@@ -572,7 +574,7 @@
             BARRACUDA: {
                 name: 'バラクーダ',
                 size: 30,
-                speed: 6,
+                speed: 4,
                 value: -60,
                 behavior: 'ambush_predator',
                 color: '#C0C0C0',
@@ -586,7 +588,7 @@
             GREAT_WHITE_SHARK: {
                 name: 'ホオジロザメ',
                 size: 60,
-                speed: 5,
+                speed: 3.5,
                 value: -150,
                 behavior: 'apex_predator',
                 color: '#708090',
@@ -599,7 +601,7 @@
             GIANT_OCTOPUS: {
                 name: '巨大タコ',
                 size: 80,
-                speed: 3,
+                speed: 2.5,
                 value: -200,
                 behavior: 'tentacle_boss',
                 color: '#8B0000',
@@ -611,7 +613,7 @@
             ELECTRIC_EEL: {
                 name: '電気ウナギ',
                 size: 40,
-                speed: 4,
+                speed: 3,
                 value: -120,
                 behavior: 'electric_attack',
                 color: '#FFD700',
@@ -623,7 +625,7 @@
             HAMMERHEAD_SHARK: {
                 name: 'ハンマーヘッドシャーク',
                 size: 55,
-                speed: 6,
+                speed: 4,
                 value: -140,
                 behavior: 'hammer_attack',
                 color: '#696969',
@@ -857,8 +859,8 @@
             
             if (dist < 150) {
                 // 直接攻撃
-                entity.vx = (dx / dist) * entity.speed * 1.5;
-                entity.vy = (dy / dist) * entity.speed * 1.5;
+                entity.vx = (dx / dist) * entity.speed * 1.1;
+                entity.vy = (dy / dist) * entity.speed * 1.1;
                 entity.isAttacking = true;
                 
                 // 攻撃エフェクト
@@ -893,8 +895,8 @@
                 if (dist < 200) {
                     // 包囲攻撃
                     const angle = Math.atan2(GameState.player.y - entity.y, GameState.player.x - entity.x);
-                    entity.vx = Math.cos(angle) * entity.speed * 1.3;
-                    entity.vy = Math.sin(angle) * entity.speed * 1.3;
+                    entity.vx = Math.cos(angle) * entity.speed * 1.0;
+                    entity.vy = Math.sin(angle) * entity.speed * 1.0;
                     entity.isAttacking = true;
                 }
             } else {
@@ -910,8 +912,8 @@
             if (dist < 250) {
                 // 突進攻撃
                 if (entity.behaviorTimer > 1500) {
-                    entity.vx = (dx / dist) * entity.speed * 2.5;
-                    entity.vy = (dy / dist) * entity.speed * 2.5;
+                    entity.vx = (dx / dist) * entity.speed * 1.5;
+                    entity.vy = (dy / dist) * entity.speed * 1.5;
                     entity.isAttacking = true;
                     
                     if (entity.behaviorTimer > 2000) {
@@ -932,11 +934,11 @@
             
             if (dist < 100) {
                 // 蛇のような曲がりくねった攻撃
-                const waveX = Math.sin(entity.glowTime * 5) * entity.speed * 0.5;
-                const waveY = Math.cos(entity.glowTime * 3) * entity.speed * 0.5;
+                const waveX = Math.sin(entity.glowTime * 5) * entity.speed * 0.3;
+                const waveY = Math.cos(entity.glowTime * 3) * entity.speed * 0.3;
                 
-                entity.vx = (dx / dist) * entity.speed + waveX;
-                entity.vy = (dy / dist) * entity.speed + waveY;
+                entity.vx = (dx / dist) * entity.speed * 0.9 + waveX;
+                entity.vy = (dy / dist) * entity.speed * 0.9 + waveY;
                 entity.isAttacking = true;
             }
         }
@@ -969,8 +971,8 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
             
             if (dist < 200) {
-                entity.vx = (dx / dist) * entity.speed;
-                entity.vy = (dy / dist) * entity.speed;
+                entity.vx = (dx / dist) * entity.speed * 0.8;
+                entity.vy = (dy / dist) * entity.speed * 0.8;
                 
                 // 電気攻撃
                 if (entity.attackCooldown <= 0) {
@@ -987,8 +989,8 @@
             
             if (dist < 300) {
                 // 高速突進
-                entity.vx = (dx / dist) * entity.speed * 1.8;
-                entity.vy = (dy / dist) * entity.speed * 1.8;
+                entity.vx = (dx / dist) * entity.speed * 1.2;
+                entity.vy = (dy / dist) * entity.speed * 1.2;
                 
                 // ハンマー攻撃エフェクト
                 if (entity.attackCooldown <= 0) {
@@ -1626,20 +1628,20 @@
             // プレイヤーが大きすぎる場合は逃げる
             if (playerCanEat && !entity.dangerous && distance < entity.fleeDistance * 2) {
                 entity.aiState = 'fleeing';
-                entity.vx = -(dx / distance) * entity.speed * 1.5;
-                entity.vy = -(dy / distance) * entity.speed * 1.5;
+                entity.vx = -(dx / distance) * entity.speed * 1.3;
+                entity.vy = -(dy / distance) * entity.speed * 1.3;
             }
             // 危険な生物で、プレイヤーを食べられる場合は追跡
             else if (entity.dangerous && canEatPlayer && distance < entity.alertDistance) {
                 entity.aiState = 'chasing';
-                entity.vx = (dx / distance) * entity.speed * 1.2;
-                entity.vy = (dy / distance) * entity.speed * 1.2;
+                entity.vx = (dx / distance) * entity.speed * 1.0;
+                entity.vy = (dy / distance) * entity.speed * 1.0;
             }
             // 攻撃範囲内
             else if (entity.dangerous && distance < entity.chaseDistance) {
                 entity.aiState = 'attacking';
-                entity.vx = (dx / distance) * entity.speed * 1.5;
-                entity.vy = (dy / distance) * entity.speed * 1.5;
+                entity.vx = (dx / distance) * entity.speed * 1.1;
+                entity.vy = (dy / distance) * entity.speed * 1.1;
             }
             // それ以外は基本行動
             else {
@@ -1772,8 +1774,8 @@
 
         function updateFastSchoolingBehavior(entity) {
             updateSchoolingBehavior(entity);
-            entity.vx *= 1.3;
-            entity.vy *= 1.3;
+            entity.vx *= 1.1;
+            entity.vy *= 1.1;
         }
 
         function updateColorfulSwimming(entity) {
@@ -1805,8 +1807,8 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
             
             if (dist > 0) {
-                entity.vx = (dx / dist) * entity.speed * 1.5;
-                entity.vy = (dy / dist) * entity.speed * 1.5;
+                entity.vx = (dx / dist) * entity.speed * 1.2;
+                entity.vy = (dy / dist) * entity.speed * 1.2;
             }
         }
 
@@ -1832,8 +1834,8 @@
                 const predDist = Math.sqrt(predDx * predDx + predDy * predDy);
                 
                 if (predDist > 0) {
-                    entity.vx = (predDx / predDist) * entity.speed * 1.3;
-                    entity.vy = (predDy / predDist) * entity.speed * 1.3;
+                    entity.vx = (predDx / predDist) * entity.speed * 1.0;
+                    entity.vy = (predDy / predDist) * entity.speed * 1.0;
                 }
             }
         }
@@ -1850,8 +1852,8 @@
                 const dist = Math.sqrt(dx * dx + dy * dy);
                 
                 if (dist < 200) {
-                    entity.vx = (dx / dist) * entity.speed * 2;
-                    entity.vy = (dy / dist) * entity.speed * 2;
+                    entity.vx = (dx / dist) * entity.speed * 1.3;
+                    entity.vy = (dy / dist) * entity.speed * 1.3;
                 }
             }
         }
@@ -1863,8 +1865,8 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
             
             if (dist < 300) {
-                entity.vx = (dx / dist) * entity.speed * 1.2;
-                entity.vy = (dy / dist) * entity.speed * 1.2;
+                entity.vx = (dx / dist) * entity.speed * 1.0;
+                entity.vy = (dy / dist) * entity.speed * 1.0;
                 
                 // 威嚇エフェクト
                 if (Math.random() < 0.01) {
