@@ -477,7 +477,7 @@
                 level: 2,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 40
+                spawnWeight: 50
             },
             PIRANHA: {
                 name: 'ピラニア',
@@ -489,7 +489,7 @@
                 level: 2,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 35
+                spawnWeight: 45
             },
             SWORDFISH: {
                 name: 'カジキ',
@@ -501,7 +501,7 @@
                 level: 3,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 30
+                spawnWeight: 35
             },
             MORAY_EEL: {
                 name: 'ウツボ',
@@ -513,7 +513,7 @@
                 level: 3,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 25
+                spawnWeight: 30
             },
             
             // 危険な魚
@@ -527,7 +527,7 @@
                 level: 1,
                 dangerous: true,
                 isToxic: true,
-                spawnWeight: 15
+                spawnWeight: 20
             },
             PUFFERFISH: {
                 name: 'フグ',
@@ -539,7 +539,7 @@
                 level: 2,
                 dangerous: true,
                 canInflate: true,
-                spawnWeight: 12
+                spawnWeight: 18
             },
             STINGRAY: {
                 name: 'エイ',
@@ -564,7 +564,7 @@
                 level: 2,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 6
+                spawnWeight: 10
             },
             BARRACUDA: {
                 name: 'バラクーダ',
@@ -576,7 +576,7 @@
                 level: 3,
                 dangerous: true,
                 isAggressive: true,
-                spawnWeight: 4
+                spawnWeight: 8
             },
             
             // ボス級生物
@@ -642,7 +642,7 @@
                 level: 2,
                 dangerous: true,
                 isToxic: true,
-                spawnWeight: 8
+                spawnWeight: 12
             },
             OCTOPUS: {
                 name: 'タコ',
@@ -2166,13 +2166,13 @@
             const creatureType = CreatureTypes[entity.type];
             
             if (creatureType.isHealthItem) {
-                GameState.player.health = Math.min(100, GameState.player.health + 50);
+                GameState.player.health = Math.min(100, GameState.player.health + 30);
                 GameState.score += creatureType.value;
                 createHealingEffect(entity.x, entity.y);
                 addCombo();
             } else if (creatureType.isPowerUp) {
                 GameState.isInvincible = true;
-                GameState.invincibilityTime = 3000;
+                GameState.invincibilityTime = 2000;
                 GameState.score += creatureType.value;
                 createPowerUpEffect(entity.x, entity.y);
                 addCombo();
@@ -2206,15 +2206,15 @@
                     }
                 }
                 
-                let damage = 25;
-                if (creatureType.isToxic) damage = 35;
-                if (creatureType.isAggressive) damage = 45;
-                if (creatureType.isApexPredator) damage = 80;
-                if (creatureType.isBoss) damage = 60;
+                let damage = 40;
+                if (creatureType.isToxic) damage = 50;
+                if (creatureType.isAggressive) damage = 65;
+                if (creatureType.isApexPredator) damage = 90;
+                if (creatureType.isBoss) damage = 85;
                 
                 GameState.player.health -= damage;
                 GameState.isInvincible = true;
-                GameState.invincibilityTime = 1000;
+                GameState.invincibilityTime = 600;
                 GameState.combo = 0;
                 
                 createDamageEffect(entity.x, entity.y, damage);
@@ -2231,7 +2231,7 @@
                     if (GameState.isGiantMode) growthAmount *= 1.5; // 巨大化中は成長ボーナス
                     
                     GameState.player.radius += growthAmount;
-                    GameState.oxygen = Math.min(100, GameState.oxygen + 5);
+                    GameState.oxygen = Math.min(100, GameState.oxygen + 3);
                 }
                 createEatEffect(entity.x, entity.y, creatureType.value);
                 addCombo();
@@ -2261,7 +2261,7 @@
         }
 
         function updateOxygen(deltaTime) {
-            GameState.oxygen -= 0.015;
+            GameState.oxygen -= 0.025;
             if (GameState.oxygen <= 0) {
                 gameOver();
             }
