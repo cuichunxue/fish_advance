@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#003f5c">
+    <title>海の大冒険！魚のエボリューション</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: linear-gradient(180deg, #0077be 0%, #003f5c 100%);
+            font-family: Arial, sans-serif;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(180deg, 
+                rgba(135, 206, 250, 0.8) 0%, 
+                rgba(70, 130, 180, 0.9) 30%, 
+                rgba(25, 25, 112, 0.95) 70%, 
+                rgba(0, 0, 139, 1) 100%);
+            touch-action: none;
+            cursor: pointer;
+        }
+
+        .ui-panel {
+            position: absolute;
+            background: rgba(0, 50, 100, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 100;
+        }
+
+        #scorePanel {
+            top: 10px;
+            left: 10px;
+        }
+
+        #levelPanel {
+            top: 10px;
+            right: 10px;
+        }
+
+        #infoPanel {
+            bottom: 10px;
+            left: 10px;
+            max-width: 220px;
+            font-size: 12px;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 30, 60, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .screen h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .screen p {
+            font-size: 16px;
+            margin-bottom: 30px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .button {
+            background: linear-gradient(45deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+            touch-action: manipulation;
+        }
+
+        .button:hover, .button:active {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+        }
+
+        #joystick {
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom) + 20px);
+            right: env(safe-area-inset-right, 20px);
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 50%;
+            z-index: 100;
+            touch-action: none;
+            pointer-events: auto;
+        }
+
+        #joystickKnob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(45deg, #00ffff, #0080ff);
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
+        }
+
+        #joystickKnob.active {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.6);
+        }
+
+        @media (max-width: 768px) {
+            .screen h1 {
+                font-size: 28px;
+            }
+            
+            .screen p {
+                font-size: 14px;
+                padding: 0 20px;
+            }
+            
+            .button {
+                padding: 12px 24px;
+                font-size: 16px;
+            }
+            
+            #joystick {
+                width: 70px;
+                height: 70px;
+            }
+            
+            #joystickKnob {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="scorePanel" class="ui-panel">
+            スコア: <span id="scoreValue">0</span>
+        </div>
+        
+        <div id="levelPanel" class="ui-panel">
+            レベル: <span id="levelValue">1</span>
+        </div>
+        
+        <div id="infoPanel" class="ui-panel">
+            <div id="playerInfo">🐠 小さな魚</div>
+            <div style="margin-top: 5px;">
+                体力: <div style="background: #333; height: 8px; border-radius: 4px; overflow: hidden; width: 100px; display: inline-block;">
+                    <div id="healthFill" style="background: linear-gradient(90deg, #00ff00, #ffff00); height: 100%; width: 100%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            <div style="margin-top: 5px;">
+                酸素: <div style="background: #333; height: 8px; border-radius: 4px; overflow: hidden; width: 100px; display: inline-block;">
+                    <div id="oxygenFill" style="background: linear-gradient(90deg, #00ff00, #ffff00); height: 100%; width: 100%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            <div id="invincibilityStatus" style="margin-top: 5px; color: #FFD700; display: none;">
+                ⭐ 無敵時間中！
+            </div>
+        </div>
+        
+        <div id="startScreen" class="screen">
+            <h1>🌊 海の大冒険！ 🐟</h1>
+            <p>危険な海で多様な生物と出会い、成長していこう！<br>
+            タコの足、フグの毒、サメの牙など、リアルな海洋生物たちが待っている！<br>
+            タップまたはジョイスティックで操作しよう！</p>
+            <button id="startButton" class="button">🚀 冒険開始！</button>
+        </div>
+        
+        <div id="gameOverScreen" class="screen" style="display: none;">
+            <h1>🌊 冒険終了 🌊</h1>
+            <p id="finalScore">スコア: 0</p>
+            <p id="achievements"></p>
+            <button id="restartButton" class="button">🔄 もう一度冒険</button>
+        </div>
+
+        <div id="joystick">
+            <div id="joystickKnob"></div>
+        </div>
+    </div>
+
+    <script>
+        // 豪華版海洋生物ゲーム（動作確実版）
+        
+        // ゲーム状態
+        let GameState = {
+            score: 0,
+            level: 1,
+            gameRunning: false,
+            player: null,
+            entities: [],
+            particles: [],
+            bubbles: [],
+            animationId: null,
+            oxygen: 100,
+            isInvincible: false,
+            invincibilityTime: 0,
+            swallowingAnimations: [],
+            joystick: {
+                active: false,
+                inputX: 0,
+                inputY: 0
+            }
+        };
+
+        // DOM要素
+        let elements = {};
+
+        // 海洋生物の定義（豪華版）
+        const CreatureTypes = {
+            // レベル1：小型生物
+            PLANKTON: {
+                name: 'プランクトン',
+                size: 4,
+                speed: 0.5,
+                value: 5,
+                behavior: 'drifting',
+                color: '#90EE90',
+                level: 1,
+                dangerous: false
+            },
+            SMALL_FISH: {
+                name: '小魚',
+                size: 8,
+                speed: 2,
+                value: 10,
+                behavior: 'schooling',
+                color: '#FFD700',
+                level: 1,
+                dangerous: false
+            },
+            TOXIC_FISH: {
+                name: '毒魚',
+                size: 9,
+                speed: 1.5,
+                value: -35,
+                behavior: 'toxic_swimming',
+                color: '#FF1493',
+                level: 1,
+                dangerous: true,
+                isToxic: true
+            },
+            BABY_SHARK: {
+                name: '子サメ',
+                size: 14,
+                speed: 4,
+                value: -40,
+                behavior: 'aggressive_chase',
+                color: '#708090',
+                level: 1,
+                dangerous: true,
+                isAggressive: true
+            },
+            POISONOUS_ANEMONE: {
+                name: '毒イソギンチャク',
+                size: 12,
+                speed: 0,
+                value: -50,
+                behavior: 'anemone_trap',
+                color: '#FF69B4',
+                level: 1,
+                dangerous: true,
+                isToxic: true
+            },
+            
+            // レベル2：中型生物
+            HORSE_MACKEREL: {
+                name: 'アジ',
+                size: 15,
+                speed: 4,
+                value: 25,
+                behavior: 'fast_schooling',
+                color: '#4169E1',
+                level: 2,
+                dangerous: false
+            },
+            CRAB: {
+                name: 'カニ',
+                size: 15,
+                speed: 1.5,
+                value: -25,
+                behavior: 'crab_pincer_attack',
+                color: '#FF4500',
+                level: 2,
+                dangerous: true,
+                hasClaws: true
+            },
+            PUFFERFISH: {
+                name: 'フグ',
+                size: 16,
+                speed: 1.5,
+                value: -30,
+                behavior: 'puffer_defense',
+                color: '#FFFF00',
+                level: 2,
+                dangerous: true,
+                canInflate: true
+            },
+            
+            // レベル3：特殊生物
+            OCTOPUS: {
+                name: 'タコ',
+                size: 25,
+                speed: 2,
+                value: -40,
+                behavior: 'tentacle_attack',
+                color: '#8B0000',
+                level: 3,
+                dangerous: true
+            },
+            JELLYFISH: {
+                name: 'クラゲ',
+                size: 30,
+                speed: 0.8,
+                value: -45,
+                behavior: 'drifting',
+                color: '#DA70D6',
+                level: 3,
+                dangerous: true,
+                isToxic: true
+            },
+            SQUID: {
+                name: 'イカ',
+                size: 22,
+                speed: 3,
+                value: -35,
+                behavior: 'ink_defense',
+                color: '#2F4F4F',
+                level: 3,
+                dangerous: true
+            },
+            
+            // レベル4+：大型・危険生物
+            GREAT_WHITE_SHARK: {
+                name: 'ホオジロザメ',
+                size: 50,
+                speed: 5,
+                value: -200,
+                behavior: 'apex_predator',
+                color: '#708090',
+                level: 4,
+                dangerous: true,
+                isApexPredator: true
+            },
+            BARRACUDA: {
+                name: 'バラクーダ',
+                size: 30,
+                speed: 6,
+                value: -60,
+                behavior: 'barracuda_strike',
+                color: '#C0C0C0',
+                level: 4,
+                dangerous: true,
+                isAggressive: true
+            },
+            WHALE: {
+                name: 'クジラ',
+                size: 80,
+                speed: 1.5,
+                value: 500,
+                behavior: 'whale_feeding',
+                color: '#191970',
+                level: 5,
+                dangerous: false,
+                isMammal: true
+            },
+            
+            // 特別アイテム
+            TREASURE: {
+                name: '宝箱',
+                size: 15,
+                speed: 0,
+                value: 100,
+                behavior: 'treasure',
+                color: '#FFD700',
+                level: 1,
+                dangerous: false
+            },
+            HEALTH_POTION: {
+                name: '回復薬',
+                size: 10,
+                speed: 0.3,
+                value: 20,
+                behavior: 'health_item',
+                color: '#00FF00',
+                level: 2,
+                dangerous: false,
+                isHealthItem: true
+            },
+            POWER_UP: {
+                name: 'パワーアップ',
+                size: 12,
+                speed: 0.5,
+                value: 50,
+                behavior: 'power_up',
+                color: '#FFD700',
+                level: 3,
+                dangerous: false,
+                isPowerUp: true
+            }
+        };
+
+        // 初期化
+        function init() {
+            console.log('=== 豪華版初期化開始 ===');
+            
+            try {
+                // DOM要素取得
+                elements.canvas = document.getElementById('gameCanvas');
+                elements.ctx = elements.canvas ? elements.canvas.getContext('2d') : null;
+                elements.startButton = document.getElementById('startButton');
+                elements.restartButton = document.getElementById('restartButton');
+                elements.joystick = document.getElementById('joystick');
+                elements.joystickKnob = document.getElementById('joystickKnob');
+                
+                elements.scoreValue = document.getElementById('scoreValue');
+                elements.levelValue = document.getElementById('levelValue');
+                elements.healthFill = document.getElementById('healthFill');
+                elements.oxygenFill = document.getElementById('oxygenFill');
+                elements.playerInfo = document.getElementById('playerInfo');
+                elements.invincibilityStatus = document.getElementById('invincibilityStatus');
+                
+                elements.startScreen = document.getElementById('startScreen');
+                elements.gameOverScreen = document.getElementById('gameOverScreen');
+                elements.finalScore = document.getElementById('finalScore');
+                elements.achievements = document.getElementById('achievements');
+                
+                console.log('DOM要素取得完了');
+                
+                if (!elements.canvas || !elements.ctx) {
+                    console.error('キャンバスまたはコンテキストが取得できません');
+                    return;
+                }
+                
+                // キャンバス設定
+                resizeCanvas();
+                elements.canvas.style.touchAction = 'none';
+                
+                // イベント設定
+                setupEvents();
+                
+                // 初期泡生成
+                initBubbles();
+                
+                console.log('=== 豪華版初期化完了 ===');
+                
+            } catch (error) {
+                console.error('初期化エラー:', error);
+            }
+        }
+
+        // キャンバスサイズ調整
+        function resizeCanvas() {
+            if (elements.canvas) {
+                elements.canvas.width = window.innerWidth;
+                elements.canvas.height = window.innerHeight;
+                console.log('キャンバスサイズ:', elements.canvas.width, 'x', elements.canvas.height);
+            }
+        }
+
+        // イベント設定
+        function setupEvents() {
+            console.log('イベント設定開始');
+            
+            // スタート/リスタートボタン
+            if (elements.startButton) {
+                elements.startButton.onclick = function() {
+                    console.log('スタートボタンクリック');
+                    startGame();
+                };
+                elements.startButton.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    console.log('スタートボタンタッチ');
+                    startGame();
+                }, { passive: false });
+            }
+            
+            if (elements.restartButton) {
+                elements.restartButton.onclick = function() {
+                    console.log('リスタートボタンクリック');
+                    startGame();
+                };
+                elements.restartButton.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    console.log('リスタートボタンタッチ');
+                    startGame();
+                }, { passive: false });
+            }
+            
+            // キャンバスイベント
+            if (elements.canvas) {
+                elements.canvas.addEventListener('touchstart', handleTouch, { passive: false });
+                elements.canvas.addEventListener('click', handleClick);
+                elements.canvas.ontouchstart = handleTouch;
+                elements.canvas.onclick = handleClick;
+            }
+            
+            // ジョイスティック
+            setupJoystick();
+            
+            // リサイズ
+            window.addEventListener('resize', resizeCanvas);
+            
+            console.log('イベント設定完了');
+        }
+
+        // ジョイスティック設定
+        function setupJoystick() {
+            if (!elements.joystick || !elements.joystickKnob) {
+                console.log('ジョイスティック要素なし');
+                return;
+            }
+            
+            console.log('ジョイスティック設定開始');
+            
+            let isDragging = false;
+            const maxDistance = 25;
+            
+            function getJoystickCenter() {
+                const rect = elements.joystick.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+            }
+            
+            function handleJoystickStart(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                isDragging = true;
+                GameState.joystick.active = true;
+                elements.joystickKnob.classList.add('active');
+                updateJoystick(e);
+            }
+            
+            function handleJoystickMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                updateJoystick(e);
+            }
+            
+            function handleJoystickEnd(e) {
+                e.preventDefault();
+                isDragging = false;
+                GameState.joystick.active = false;
+                GameState.joystick.inputX = 0;
+                GameState.joystick.inputY = 0;
+                elements.joystickKnob.classList.remove('active');
+                
+                elements.joystickKnob.style.left = '50%';
+                elements.joystickKnob.style.top = '50%';
+            }
+            
+            function updateJoystick(e) {
+                const center = getJoystickCenter();
+                let clientX, clientY;
+                
+                if (e.touches && e.touches[0]) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                } else {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                }
+                
+                const deltaX = clientX - center.x;
+                const deltaY = clientY - center.y;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                if (distance <= maxDistance) {
+                    GameState.joystick.inputX = deltaX / maxDistance;
+                    GameState.joystick.inputY = deltaY / maxDistance;
+                } else {
+                    GameState.joystick.inputX = (deltaX / distance);
+                    GameState.joystick.inputY = (deltaY / distance);
+                }
+                
+                const knobX = 50 + (GameState.joystick.inputX * 40);
+                const knobY = 50 + (GameState.joystick.inputY * 40);
+                elements.joystickKnob.style.left = knobX + '%';
+                elements.joystickKnob.style.top = knobY + '%';
+            }
+            
+            // イベントリスナー
+            elements.joystick.addEventListener('touchstart', handleJoystickStart, { passive: false });
+            elements.joystick.addEventListener('mousedown', handleJoystickStart);
+            
+            document.addEventListener('touchmove', handleJoystickMove, { passive: false });
+            document.addEventListener('mousemove', handleJoystickMove);
+            
+            document.addEventListener('touchend', handleJoystickEnd, { passive: false });
+            document.addEventListener('mouseup', handleJoystickEnd);
+            
+            console.log('ジョイスティック設定完了');
+        }
+
+        // タッチ処理
+        function handleTouch(e) {
+            if (!GameState.gameRunning) return;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const touch = e.touches[0];
+            if (!touch) return;
+            
+            const rect = elements.canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            // ジョイスティック領域を避ける
+            if (elements.joystick && elements.joystick.style.display !== 'none') {
+                const joystickRect = elements.joystick.getBoundingClientRect();
+                if (touch.clientX >= joystickRect.left - 20 && 
+                    touch.clientX <= joystickRect.right + 20 &&
+                    touch.clientY >= joystickRect.top - 20 && 
+                    touch.clientY <= joystickRect.bottom + 20) {
+                    return;
+                }
+            }
+            
+            if (GameState.player) {
+                GameState.player.targetX = x;
+                GameState.player.targetY = y;
+            }
+        }
+
+        // クリック処理
+        function handleClick(e) {
+            if (!GameState.gameRunning) return;
+            
+            e.preventDefault();
+            
+            const rect = elements.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (GameState.player) {
+                GameState.player.targetX = x;
+                GameState.player.targetY = y;
+            }
+        }
+
+        // 初期泡生成
+        function initBubbles() {
+            GameState.bubbles = [];
+            for (let i = 0; i < 20; i++) {
+                createBubble();
+            }
+        }
+
+        // 泡作成
+        function createBubble() {
+            GameState.bubbles.push({
+                x: Math.random() * elements.canvas.width,
+                y: elements.canvas.height + 20,
+                radius: Math.random() * 5 + 2,
+                speed: Math.random() * 2 + 0.5,
+                alpha: Math.random() * 0.5 + 0.3
+            });
+        }
+
+        // ゲーム開始
+        function startGame() {
+            console.log('=== ゲーム開始 ===');
+            
+            // 状態リセット
+            GameState.score = 0;
+            GameState.level = 1;
+            GameState.entities = [];
+            GameState.particles = [];
+            GameState.swallowingAnimations = [];
+            GameState.gameRunning = true;
+            GameState.oxygen = 100;
+            GameState.isInvincible = false;
+            GameState.invincibilityTime = 0;
+            
+            // プレイヤー初期化
+            GameState.player = {
+                x: elements.canvas.width / 2,
+                y: elements.canvas.height / 2,
+                targetX: elements.canvas.width / 2,
+                targetY: elements.canvas.height / 2,
+                radius: 15,
+                speed: 3,
+                health: 100,
+                angle: 0,
+                color: '#FFD700'
+            };
+            
+            // UI表示切り替え
+            elements.startScreen.style.display = 'none';
+            elements.gameOverScreen.style.display = 'none';
+            elements.joystick.style.display = 'block';
+            
+            // UI更新
+            updateUI();
+            
+            // 初期エンティティ生成
+            for (let i = 0; i < 8; i++) {
+                spawnEntity();
+            }
+            
+            // ゲームループ開始
+            if (GameState.animationId) {
+                cancelAnimationFrame(GameState.animationId);
+            }
+            gameLoop();
+            
+            console.log('=== ゲーム開始完了 ===');
+        }
+
+        // エンティティ生成
+        function spawnEntity() {
+            const availableTypes = Object.keys(CreatureTypes).filter(type => {
+                const creature = CreatureTypes[type];
+                return !creature.level || creature.level <= GameState.level + 1;
+            });
+            
+            const type = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            const creatureType = CreatureTypes[type];
+            
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            
+            switch (side) {
+                case 0: // 上
+                    x = Math.random() * elements.canvas.width;
+                    y = -30;
+                    break;
+                case 1: // 右
+                    x = elements.canvas.width + 30;
+                    y = Math.random() * elements.canvas.height;
+                    break;
+                case 2: // 下
+                    x = Math.random() * elements.canvas.width;
+                    y = elements.canvas.height + 30;
+                    break;
+                case 3: // 左
+                    x = -30;
+                    y = Math.random() * elements.canvas.height;
+                    break;
+            }
+            
+            const entity = {
+                x: x,
+                y: y,
+                type: type,
+                radius: creatureType.size,
+                speed: creatureType.speed,
+                vx: (Math.random() - 0.5) * creatureType.speed,
+                vy: (Math.random() - 0.5) * creatureType.speed,
+                color: creatureType.color,
+                dangerous: creatureType.dangerous,
+                value: creatureType.value,
+                angle: Math.atan2((Math.random() - 0.5), (Math.random() - 0.5)),
+                behavior: creatureType.behavior
+            };
+            
+            GameState.entities.push(entity);
+        }
+
+        // メインゲームループ
+        function gameLoop() {
+            if (!GameState.gameRunning) return;
+            
+            update();
+            render();
+            
+            GameState.animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // 更新処理
+        function update() {
+            updatePlayer();
+            updateEntities();
+            updateParticles();
+            updateBubbles();
+            updateSwallowingAnimations();
+            updateInvincibility();
+            checkCollisions();
+            spawnNewEntities();
+            updateOxygen();
+            checkLevelUp();
+        }
+
+        // プレイヤー更新
+        function updatePlayer() {
+            const player = GameState.player;
+            let moveX = 0, moveY = 0;
+            
+            // ジョイスティック入力
+            if (GameState.joystick.active) {
+                moveX = GameState.joystick.inputX * player.speed;
+                moveY = GameState.joystick.inputY * player.speed;
+                player.x += moveX;
+                player.y += moveY;
+            } else {
+                // 目標位置への移動
+                const dx = player.targetX - player.x;
+                const dy = player.targetY - player.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 3) {
+                    moveX = (dx / distance) * player.speed;
+                    moveY = (dy / distance) * player.speed;
+                    player.x += moveX;
+                    player.y += moveY;
+                }
+            }
+            
+            // 角度更新
+            if (Math.abs(moveX) > 0.1 || Math.abs(moveY) > 0.1) {
+                player.angle = Math.atan2(moveY, moveX);
+            }
+            
+            // 境界チェック
+            player.x = Math.max(player.radius, Math.min(elements.canvas.width - player.radius, player.x));
+            player.y = Math.max(player.radius, Math.min(elements.canvas.height - player.radius, player.y));
+        }
+
+        // エンティティ更新
+        function updateEntities() {
+            GameState.entities = GameState.entities.filter(entity => {
+                // 基本移動
+                entity.x += entity.vx;
+                entity.y += entity.vy;
+                
+                // 行動更新
+                updateEntityBehavior(entity);
+                
+                // 角度更新
+                if (Math.abs(entity.vx) > 0.1 || Math.abs(entity.vy) > 0.1) {
+                    entity.angle = Math.atan2(entity.vy, entity.vx);
+                }
+                
+                // 画面外判定
+                return entity.x > -100 && entity.x < elements.canvas.width + 100 &&
+                       entity.y > -100 && entity.y < elements.canvas.height + 100;
+            });
+        }
+
+        // エンティティ行動更新
+        function updateEntityBehavior(entity) {
+            const behavior = entity.behavior;
+            
+            switch (behavior) {
+                case 'schooling':
+                    updateSchoolingBehavior(entity);
+                    break;
+                case 'fast_schooling':
+                    updateFastSchoolingBehavior(entity);
+                    break;
+                case 'aggressive_chase':
+                    updateAggressiveChase(entity);
+                    break;
+                case 'tentacle_attack':
+                    updateTentacleAttack(entity);
+                    break;
+                case 'puffer_defense':
+                    updatePufferDefense(entity);
+                    break;
+                case 'apex_predator':
+                    updateApexPredator(entity);
+                    break;
+                case 'drifting':
+                    updateDriftingBehavior(entity);
+                    break;
+                case 'toxic_swimming':
+                    updateToxicSwimming(entity);
+                    break;
+                case 'anemone_trap':
+                    updateAnemoneTraps(entity);
+                    break;
+                case 'crab_pincer_attack':
+                    updateCrabPincerAttack(entity);
+                    break;
+                case 'barracuda_strike':
+                    updateBarracudaStrike(entity);
+                    break;
+                case 'whale_feeding':
+                    updateWhaleFeeding(entity);
+                    break;
+                case 'ink_defense':
+                    updateInkDefense(entity);
+                    break;
+                case 'health_item':
+                case 'power_up':
+                    updatePowerUp(entity);
+                    break;
+                default:
+                    updateWanderingBehavior(entity);
+            }
+        }
+
+        // 基本的な行動パターン
+        function updateSchoolingBehavior(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 80) {
+                entity.vx -= dx * 0.01;
+                entity.vy -= dy * 0.01;
+            }
+        }
+
+        function updateFastSchoolingBehavior(entity) {
+            updateSchoolingBehavior(entity);
+            entity.vx *= 1.5;
+            entity.vy *= 1.5;
+        }
+
+        function updateAggressiveChase(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 120) {
+                entity.vx = (dx / dist) * entity.speed * 1.3;
+                entity.vy = (dy / dist) * entity.speed * 1.3;
+            }
+        }
+
+        function updateTentacleAttack(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 60) {
+                entity.isAttacking = true;
+            } else {
+                entity.isAttacking = false;
+                updateWanderingBehavior(entity);
+            }
+        }
+
+        function updatePufferDefense(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 50 && !entity.isInflated) {
+                entity.isInflated = true;
+                entity.originalRadius = entity.radius;
+                entity.radius *= 1.5;
+            }
+        }
+
+        function updateApexPredator(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 200) {
+                entity.vx = (dx / dist) * entity.speed * 1.2;
+                entity.vy = (dy / dist) * entity.speed * 1.2;
+            }
+        }
+
+        function updateDriftingBehavior(entity) {
+            entity.vx = Math.sin(Date.now() * 0.001) * 0.5;
+            entity.vy = Math.cos(Date.now() * 0.0008) * 0.3 + 0.2;
+        }
+
+        function updateToxicSwimming(entity) {
+            updateWanderingBehavior(entity);
+            if (Math.random() < 0.01) {
+                createToxicParticle(entity.x, entity.y);
+            }
+        }
+
+        function updateAnemoneTraps(entity) {
+            entity.vx = 0;
+            entity.vy = 0;
+            
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 60) {
+                entity.isLuring = true;
+            }
+        }
+
+        function updateCrabPincerAttack(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 40) {
+                entity.isAttacking = true;
+            } else {
+                entity.isAttacking = false;
+                updateWanderingBehavior(entity);
+            }
+        }
+
+        function updateBarracudaStrike(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 150) {
+                entity.vx = (dx / dist) * entity.speed * 1.8;
+                entity.vy = (dy / dist) * entity.speed * 1.8;
+            }
+        }
+
+        function updateWhaleFeeding(entity) {
+            updateWanderingBehavior(entity);
+            entity.vx *= 0.5;
+            entity.vy *= 0.5;
+        }
+
+        function updateInkDefense(entity) {
+            const dx = GameState.player.x - entity.x;
+            const dy = GameState.player.y - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist < 60 && !entity.inkCooldown) {
+                entity.inkCooldown = 3000;
+                createInkCloud(entity.x, entity.y);
+            }
+            
+            if (entity.inkCooldown) {
+                entity.inkCooldown -= 16;
+            }
+        }
+
+        function updatePowerUp(entity) {
+            entity.glowTime = (entity.glowTime || 0) + 0.1;
+            entity.vy = Math.sin(entity.glowTime * 0.5) * 0.5;
+        }
+
+        function updateWanderingBehavior(entity) {
+            if (!entity.targetX || Math.abs(entity.x - entity.targetX) < 20) {
+                entity.targetX = Math.random() * elements.canvas.width;
+                entity.targetY = Math.random() * elements.canvas.height;
+            }
+            
+            const dx = entity.targetX - entity.x;
+            const dy = entity.targetY - entity.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            if (dist > 0) {
+                entity.vx = (dx / dist) * entity.speed * 0.3;
+                entity.vy = (dy / dist) * entity.speed * 0.3;
+            }
+        }
+
+        // パーティクル・エフェクト
+        function updateParticles() {
+            GameState.particles = GameState.particles.filter(particle => {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.life -= 16;
+                particle.alpha = particle.life / particle.maxLife;
+                return particle.life > 0;
+            });
+        }
+
+        function updateBubbles() {
+            GameState.bubbles.forEach(bubble => {
+                bubble.y -= bubble.speed;
+                bubble.x += Math.sin(bubble.y * 0.01) * 0.5;
+                
+                if (bubble.y < -20) {
+                    bubble.y = elements.canvas.height + 20;
+                    bubble.x = Math.random() * elements.canvas.width;
+                }
+            });
+        }
+
+        function updateSwallowingAnimations() {
+            GameState.swallowingAnimations = GameState.swallowingAnimations.filter(anim => {
+                anim.life -= 16;
+                anim.progress = 1 - (anim.life / anim.maxLife);
+                return anim.life > 0;
+            });
+        }
+
+        function updateInvincibility() {
+            if (GameState.isInvincible) {
+                GameState.invincibilityTime -= 16;
+                if (GameState.invincibilityTime <= 0) {
+                    GameState.isInvincible = false;
+                }
+            }
+        }
+
+        // 衝突検出
+        function checkCollisions() {
+            const player = GameState.player;
+            
+            for (let i = GameState.entities.length - 1; i >= 0; i--) {
+                const entity = GameState.entities[i];
+                const dx = player.x - entity.x;
+                const dy = player.y - entity.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < player.radius + entity.radius) {
+                    handleCollision(entity, i);
+                    break;
+                }
+            }
+        }
+
+        // 衝突処理
+        function handleCollision(entity, index) {
+            const creatureType = CreatureTypes[entity.type];
+            
+            if (creatureType.isHealthItem) {
+                GameState.player.health = Math.min(100, GameState.player.health + 50);
+                GameState.score += creatureType.value;
+                createSwallowingAnimation(entity);
+            } else if (creatureType.isPowerUp) {
+                GameState.isInvincible = true;
+                GameState.invincibilityTime = 3000;
+                GameState.score += creatureType.value;
+                createSwallowingAnimation(entity);
+            } else if (creatureType.dangerous) {
+                if (GameState.isInvincible) {
+                    GameState.entities.splice(index, 1);
+                    return;
+                }
+                
+                let damage = 30;
+                if (creatureType.isToxic) damage = 50;
+                if (creatureType.isAggressive) damage = 40;
+                if (creatureType.isApexPredator) damage = 100;
+                
+                GameState.player.health -= damage;
+                GameState.isInvincible = true;
+                GameState.invincibilityTime = 800;
+                
+                createBloodEffect(entity.x, entity.y);
+                
+                if (GameState.player.health <= 0) {
+                    gameOver();
+                    return;
+                }
+            } else {
+                // 食べられる生物
+                GameState.score += creatureType.value;
+                if (creatureType.value > 0) {
+                    GameState.player.radius += 0.3;
+                    GameState.oxygen = Math.min(100, GameState.oxygen + 3);
+                }
+                createSwallowingAnimation(entity);
+            }
+            
+            GameState.entities.splice(index, 1);
+            updateUI();
+        }
+
+        // 新しいエンティティ生成
+        function spawnNewEntities() {
+            if (Math.random() < 0.015) {
+                spawnEntity();
+            }
+        }
+
+        // 酸素更新
+        function updateOxygen() {
+            GameState.oxygen -= 0.02;
+            if (GameState.oxygen <= 0) {
+                gameOver();
+            }
+        }
+
+        // レベルアップ
+        function checkLevelUp() {
+            const newLevel = Math.floor(GameState.score / 300) + 1;
+            if (newLevel > GameState.level) {
+                GameState.level = newLevel;
+                updateUI();
+            }
+        }
+
+        // エフェクト作成
+        function createSwallowingAnimation(entity) {
+            GameState.swallowingAnimations.push({
+                playerX: GameState.player.x,
+                playerY: GameState.player.y,
+                preyX: entity.x,
+                preyY: entity.y,
+                preySize: entity.radius,
+                preyColor: entity.color,
+                progress: 0,
+                life: 800,
+                maxLife: 800
+            });
+        }
+
+        function createBloodEffect(x, y) {
+            for (let i = 0; i < 8; i++) {
+                GameState.particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    color: '#8B0000',
+                    life: 1000,
+                    maxLife: 1000,
+                    alpha: 1
+                });
+            }
+        }
+
+        function createToxicParticle(x, y) {
+            GameState.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 2,
+                vy: (Math.random() - 0.5) * 2,
+                color: '#9400D3',
+                life: 2000,
+                maxLife: 2000,
+                alpha: 0.7
+            });
+        }
+
+        function createInkCloud(x, y) {
+            for (let i = 0; i < 15; i++) {
+                GameState.particles.push({
+                    x: x + (Math.random() - 0.5) * 20,
+                    y: y + (Math.random() - 0.5) * 20,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    color: '#2F4F4F',
+                    life: 3000,
+                    maxLife: 3000,
+                    alpha: 0.8
+                });
+            }
+        }
+
+        // 描画
+        function render() {
+            const ctx = elements.ctx;
+            const canvas = elements.canvas;
+            
+            // 背景クリア
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 泡描画
+            drawBubbles(ctx);
+            
+            // パーティクル描画
+            drawParticles(ctx);
+            
+            // エンティティ描画
+            drawEntities(ctx);
+            
+            // 飲み込みアニメーション描画
+            drawSwallowingAnimations(ctx);
+            
+            // プレイヤー描画
+            drawPlayer(ctx);
+        }
+
+        function drawBubbles(ctx) {
+            GameState.bubbles.forEach(bubble => {
+                ctx.save();
+                ctx.globalAlpha = bubble.alpha;
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.beginPath();
+                ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawParticles(ctx) {
+            GameState.particles.forEach(particle => {
+                ctx.save();
+                ctx.globalAlpha = particle.alpha;
+                ctx.fillStyle = particle.color;
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawEntities(ctx) {
+            GameState.entities.forEach(entity => {
+                drawCreature(ctx, entity);
+            });
+        }
+
+        function drawCreature(ctx, entity) {
+            ctx.save();
+            ctx.translate(entity.x, entity.y);
+            ctx.rotate(entity.angle);
+            
+            // 基本の体
+            const bodyGradient = ctx.createRadialGradient(-entity.radius * 0.2, -entity.radius * 0.2, 0, 0, 0, entity.radius);
+            bodyGradient.addColorStop(0, entity.color);
+            bodyGradient.addColorStop(1, adjustColor(entity.color, -40));
+            
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            
+            // 魚類は楕円形
+            if (['SMALL_FISH', 'HORSE_MACKEREL', 'BARRACUDA', 'GREAT_WHITE_SHARK', 'BABY_SHARK'].includes(entity.type)) {
+                ctx.ellipse(0, 0, entity.radius, entity.radius * 0.7, 0, 0, Math.PI * 2);
+            } else {
+                ctx.arc(0, 0, entity.radius, 0, Math.PI * 2);
+            }
+            ctx.fill();
+            
+            // 特別な描画
+            if (entity.type === 'PUFFERFISH' && entity.isInflated) {
+                // 膨らんだフグの針
+                ctx.strokeStyle = '#8B0000';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i / 12) * Math.PI * 2;
+                    ctx.save();
+                    ctx.rotate(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(entity.radius * 0.8, 0);
+                    ctx.lineTo(entity.radius * 1.2, 0);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+            
+            if (entity.type === 'OCTOPUS' && entity.isAttacking) {
+                // タコの触手
+                ctx.strokeStyle = adjustColor(entity.color, -20);
+                ctx.lineWidth = 4;
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    ctx.save();
+                    ctx.rotate(angle);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(entity.radius * 1.5, 0);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+            
+            if (entity.type === 'CRAB' && entity.isAttacking) {
+                // カニのハサミ
+                ctx.fillStyle = '#FF0000';
+                ctx.beginPath();
+                ctx.ellipse(entity.radius * 0.8, -entity.radius * 0.6, entity.radius * 0.3, entity.radius * 0.2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(entity.radius * 0.8, entity.radius * 0.6, entity.radius * 0.3, entity.radius * 0.2, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 危険な生物の警告
+            if (entity.dangerous) {
+                ctx.strokeStyle = '#FF0000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            // 目
+            if (!['TREASURE', 'HEALTH_POTION', 'POWER_UP', 'POISONOUS_ANEMONE'].includes(entity.type)) {
+                const eyeSize = entity.radius * 0.15;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(entity.radius * 0.3, -entity.radius * 0.3, eyeSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(entity.radius * 0.3, -entity.radius * 0.3, eyeSize * 0.6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+
+        function drawSwallowingAnimations(ctx) {
+            GameState.swallowingAnimations.forEach(anim => {
+                ctx.save();
+                
+                const lerpX = anim.preyX + (anim.playerX - anim.preyX) * anim.progress;
+                const lerpY = anim.preyY + (anim.playerY - anim.preyY) * anim.progress;
+                const scale = 1 - anim.progress * 0.8;
+                
+                ctx.globalAlpha = 1 - anim.progress * 0.5;
+                ctx.translate(lerpX, lerpY);
+                ctx.scale(scale, scale);
+                
+                ctx.fillStyle = anim.preyColor;
+                ctx.beginPath();
+                ctx.arc(0, 0, anim.preySize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            });
+        }
+
+        function drawPlayer(ctx) {
+            const player = GameState.player;
+            
+            ctx.save();
+            ctx.translate(player.x, player.y);
+            ctx.rotate(player.angle);
+            
+            // 無敵時の点滅
+            if (GameState.isInvincible) {
+                const blink = Math.sin(Date.now() * 0.02) > 0;
+                if (!blink) {
+                    ctx.globalAlpha = 0.5;
+                }
+                
+                // 無敵オーラ
+                const auraGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, player.radius + 20);
+                auraGradient.addColorStop(0, 'rgba(255, 255, 0, 0.3)');
+                auraGradient.addColorStop(1, 'rgba(255, 255, 0, 0)');
+                ctx.fillStyle = auraGradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, player.radius + 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // 体のグラデーション
+            const bodyGradient = ctx.createRadialGradient(-player.radius * 0.3, -player.radius * 0.2, 0, 0, 0, player.radius);
+            bodyGradient.addColorStop(0, '#FFD700');
+            bodyGradient.addColorStop(0.7, player.color);
+            bodyGradient.addColorStop(1, adjustColor(player.color, -40));
+            
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, player.radius, player.radius * 0.7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 尻尾
+            ctx.fillStyle = adjustColor(player.color, -20);
+            ctx.beginPath();
+            ctx.moveTo(-player.radius, 0);
+            ctx.lineTo(-player.radius * 1.5, -player.radius * 0.4);
+            ctx.lineTo(-player.radius * 1.2, 0);
+            ctx.lineTo(-player.radius * 1.5, player.radius * 0.4);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 背びれ
+            ctx.beginPath();
+            ctx.moveTo(-player.radius * 0.3, -player.radius * 0.7);
+            ctx.lineTo(-player.radius * 0.1, -player.radius * 1.1);
+            ctx.lineTo(player.radius * 0.2, -player.radius * 0.7);
+            ctx.fill();
+            
+            // 目
+            const eyeSize = player.radius * 0.15;
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.arc(player.radius * 0.3, -player.radius * 0.25, eyeSize, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(player.radius * 0.3, -player.radius * 0.25, eyeSize * 0.6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // レベル表示
+            ctx.rotate(-player.angle);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+            ctx.strokeText(GameState.level, 0, 4);
+            ctx.fillText(GameState.level, 0, 4);
+            
+            ctx.restore();
+        }
+
+        // UI更新
+        function updateUI() {
+            if (elements.scoreValue) elements.scoreValue.textContent = GameState.score;
+            if (elements.levelValue) elements.levelValue.textContent = GameState.level;
+            if (elements.healthFill) elements.healthFill.style.width = GameState.player.health + '%';
+            if (elements.oxygenFill) elements.oxygenFill.style.width = GameState.oxygen + '%';
+            
+            if (elements.invincibilityStatus) {
+                elements.invincibilityStatus.style.display = GameState.isInvincible ? 'block' : 'none';
+            }
+            
+            // 体力バーの色
+            if (elements.healthFill) {
+                if (GameState.player.health > 60) {
+                    elements.healthFill.style.background = 'linear-gradient(90deg, #00ff00, #90EE90)';
+                } else if (GameState.player.health > 30) {
+                    elements.healthFill.style.background = 'linear-gradient(90deg, #ffff00, #FFA500)';
+                } else {
+                    elements.healthFill.style.background = 'linear-gradient(90deg, #ff0000, #FF6347)';
+                }
+            }
+        }
+
+        // ゲームオーバー
+        function gameOver() {
+            GameState.gameRunning = false;
+            
+            if (elements.joystick) elements.joystick.style.display = 'none';
+            
+            const achievements = [];
+            if (GameState.score > 1000) achievements.push('🏆 大冒険者');
+            if (GameState.level >= 5) achievements.push('🎖️ 深海探検家');
+            if (GameState.player.radius > 30) achievements.push('🐋 海の王者');
+            
+            if (elements.finalScore) elements.finalScore.textContent = `スコア: ${GameState.score}`;
+            if (elements.achievements) elements.achievements.textContent = achievements.join(' ');
+            if (elements.gameOverScreen) elements.gameOverScreen.style.display = 'flex';
+            
+            if (GameState.animationId) {
+                cancelAnimationFrame(GameState.animationId);
+            }
+        }
+
+        // 色調整関数
+        function adjustColor(color, amount) {
+            const hex = color.replace('#', '');
+            const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amount));
+            const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amount));
+            const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amount));
+            return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+
+        // 初期化実行
+        let initialized = false;
+        
+        function safeInit() {
+            if (initialized) return;
+            console.log('豪華版初期化実行');
+            init();
+            initialized = true;
+        }
+        
+        // 複数のタイミングで初期化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', safeInit);
+        } else {
+            safeInit();
+        }
+        
+        window.addEventListener('load', safeInit);
+        setTimeout(safeInit, 1000);
+        setTimeout(function() {
+            if (!initialized) {
+                console.log('強制初期化');
+                init();
+                initialized = true;
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
